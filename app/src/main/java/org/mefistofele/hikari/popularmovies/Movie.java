@@ -1,5 +1,6 @@
 package org.mefistofele.hikari.popularmovies;
 
+import android.content.ContentValues;
 import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -161,6 +162,7 @@ public class Movie implements Parcelable {
         Movie movie = new Movie(id, title, overview, releaseDate, posterPath, backdropPath, voteAvg, voteCnt);
         return movie;
     }
+
 
     /* This URL will used by picasso library to get the image....think whether to move in another place
     *  it's enough to pass the size of the image and poster or backdrop*/

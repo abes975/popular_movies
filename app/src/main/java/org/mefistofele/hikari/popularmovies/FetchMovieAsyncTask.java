@@ -1,13 +1,18 @@
 package org.mefistofele.hikari.popularmovies;
 
+import android.content.ContentValues;
+import android.content.Context;
 import android.content.res.Resources;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.text.format.Time;
 import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.mefistofele.hikari.popularmovies.data.MoviesContract;
+import org.mefistofele.hikari.popularmovies.data.MoviesContract.MoviesEntry;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -15,31 +20,30 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
+import java.util.Vector;
 
 /**
  * Created by seba on 11/09/16.
  */
 
-public class FetchMovieAsyncTask extends AsyncTask<String, Void, List<Movie>> {
+public class FetchMovieAsyncTask extends AsyncTask<String, Void, Void> {
     /* Download data from Movie Db */
     private final String LOG_TAG = FetchMovieAsyncTask.class.getSimpleName();
-    private final int HTTP_OK_CODE = 200;
 
-    public interface AsyncResponse {
-        void processFinish(List<Movie> result);
-    }
-    public AsyncResponse delegate = null;
+    private final Context mContext;
 
-    public FetchMovieAsyncTask(AsyncResponse delegate) {
-        this.delegate = delegate;
+    public FetchMovieAsyncTask(Context context) {
+        mContext = context;
     }
 
 
     @Override
-    protected List<Movie> doInBackground(String... params) {
+    protected Void doInBackground(String... params) {
 
         if (params.length == 0) {
             return null;
@@ -79,9 +83,6 @@ public class FetchMovieAsyncTask extends AsyncTask<String, Void, List<Movie>> {
 
             int code = urlConnection.getResponseCode();
 
-            if (code != HTTP_OK_CODE) {
-                return null;
-            }
             // Read the input stream into a String
             InputStream inputStream = urlConnection.getInputStream();
             StringBuffer buffer = new StringBuffer();
@@ -122,17 +123,17 @@ public class FetchMovieAsyncTask extends AsyncTask<String, Void, List<Movie>> {
         }
 
         try {
-            return getMovieDataFromJson(movieData);
+            getMovieDataFromJson(movieData);
+
         } catch (JSONException e) {
             Log.e(LOG_TAG, e.getMessage(), e);
             e.printStackTrace();
         }
-        // This will only happen if there was an error getting or parsing the forecast.
         return null;
     }
 
 
-    private List<Movie> getMovieDataFromJson(String downloadedData) throws JSONException {
+    private void getMovieDataFromJson(String downloadedData) throws JSONException {
 
         // These are the names of the JSON objects that need to be extracted.
         final String MDB_LIST = "results";
@@ -140,19 +141,36 @@ public class FetchMovieAsyncTask extends AsyncTask<String, Void, List<Movie>> {
         JSONObject forecastJson = new JSONObject(downloadedData);
         JSONArray moviesArray = forecastJson.getJSONArray(MDB_LIST);
 
-        ArrayList<Movie> movies = new ArrayList<Movie>();
+
+        Vector<ContentValues> moviesContentValues = new Vector<ContentValues>(moviesArray.length());
+
+
+        SimpleDateFormat s = new SimpleDateFormat("ddMMyyyyhhmmss");
+        String timestamp = s.format(new Date());
+
         for (int i = 0; i < moviesArray.length(); i++) {
             JSONObject movieObj = moviesArray.getJSONObject(i);
-            Movie movie = Movie.parseJasonData(movieObj);;
-            movies.add(movie);
+            // Parsing network data
+            Movie movie = Movie.parseJasonData(movieObj);
+            // Create a content value with parsed result
+            ContentValues movieCV = new ContentValues();
+            movieCV.put(MoviesEntry.COLUMN_MOVIE_ID, movie.getId());
+            movieCV.put(MoviesEntry.COLUMN_TITLE, movie.getTitle());
+            movieCV.put(MoviesEntry.COLUMN_RELEASE_DATE, movie.getReleaseDate());
+            movieCV.put(MoviesEntry.COLUMN_RATING, movie.getVoteAvg());
+            movieCV.put(MoviesEntry.COLUMN_IMAGE_URL, movie.getPosterPath());
+            movieCV.put(MoviesEntry.COLUMN_TIMESTAMP, timestamp);
+            movieCV.put(MoviesEntry.COLUMN_OVERVIEW, movie.getOverview());
+            moviesContentValues.add(movieCV);
+        }
+        int inserted = 0;
+        // add to database
+        if (moviesContentValues.size() > 0 ) {
+            ContentValues[] cvArray = new ContentValues[moviesContentValues.size()];
+            moviesContentValues.toArray(cvArray);
+            inserted = mContext.getContentResolver().bulkInsert(MoviesEntry.CONTENT_URI, cvArray);
         }
 
-        return movies;
-    }
-
-
-        @Override
-    protected void onPostExecute(List<Movie> results) {
-            delegate.processFinish(results);
+        Log.d(LOG_TAG, "FetchMovieTask Complete. " + inserted + " Inserted");
     }
 }
