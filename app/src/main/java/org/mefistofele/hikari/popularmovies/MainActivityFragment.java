@@ -26,6 +26,7 @@ import org.mefistofele.hikari.popularmovies.data.MoviesContract;
 import java.util.SortedMap;
 
 import static android.R.attr.id;
+import static android.os.Build.VERSION_CODES.M;
 
 /**
  * Created by seba on 04/10/16.
@@ -37,13 +38,15 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
     private static final String[] MOVIES_COLUMNS = {
             MoviesContract.MoviesEntry._ID,
             MoviesContract.MoviesEntry.COLUMN_IMAGE_URL,
+            MoviesContract.MoviesEntry.COLUMN_MOVIE_ID
     };
 
 
     // These indices are tied to FORECAST_COLUMNS.  If FORECAST_COLUMNS changes, these
     // must change.
-    static final int COL_WEATHER_ID = 0;
+    static final int COL_ID = 0;
     static final int COL_IMAGE_URL = 1;
+    static final int COL_MOVIE_ID = 2;
 
 
     private MovieCursorAdapter mMoviesAdapter;
