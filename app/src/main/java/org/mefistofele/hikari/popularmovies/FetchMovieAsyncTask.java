@@ -75,6 +75,7 @@ public class FetchMovieAsyncTask extends AsyncTask<String, Void, Void> {
                     .build();
 
             URL url = new URL(builtUri.toString());
+            Log.d("QUERY ", url.toString());
 
             // Create the request to OpenWeatherMap, and open the connection
             urlConnection = (HttpURLConnection) url.openConnection();
@@ -161,6 +162,7 @@ public class FetchMovieAsyncTask extends AsyncTask<String, Void, Void> {
             movieCV.put(MoviesEntry.COLUMN_IMAGE_URL, movie.getPosterPath());
             movieCV.put(MoviesEntry.COLUMN_TIMESTAMP, timestamp);
             movieCV.put(MoviesEntry.COLUMN_OVERVIEW, movie.getOverview());
+            movieCV.put(MoviesEntry.COLUMN_POPULARITY, movie.getPopularity());
             moviesContentValues.add(movieCV);
         }
         int inserted = 0;

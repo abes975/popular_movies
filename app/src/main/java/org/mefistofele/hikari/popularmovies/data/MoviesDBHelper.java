@@ -5,6 +5,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+import org.mefistofele.hikari.popularmovies.Movie;
+
 /**
  * Created by seba on 04/10/16.
  */
@@ -33,6 +35,7 @@ public class MoviesDBHelper extends SQLiteOpenHelper {
                 MoviesContract.MoviesEntry.COLUMN_RATING + " REAL, " +
                 MoviesContract.MoviesEntry.COLUMN_IMAGE_URL + " TEXT, " +
                 MoviesContract.MoviesEntry.COLUMN_OVERVIEW + " TEXT, " +
+                MoviesContract.MoviesEntry.COLUMN_POPULARITY + " REAL, " +
                 MoviesContract.MoviesEntry.COLUMN_FAVOURITE + " INTEGER DEFAULT 0" +
                 ");";
         sqLiteDatabase.execSQL(SQL_CREATE_MOVIE_TABLE);

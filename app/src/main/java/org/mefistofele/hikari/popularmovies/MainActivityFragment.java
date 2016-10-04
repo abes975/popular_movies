@@ -23,6 +23,8 @@ import android.widget.ListView;
 
 import org.mefistofele.hikari.popularmovies.data.MoviesContract;
 
+import java.util.SortedMap;
+
 import static android.R.attr.id;
 
 /**
@@ -110,17 +112,31 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
         updateMovies();
     }
 
+    public void onResume() {
+        getLoaderManager().initLoader(MOVIE_LOADER, null, this);
+        super.onResume();
+        updateMovies();
+    }
+
     @Override
     public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
-        Log.e("AAAH", "ON CREATE LOADER!");
+        String sortOrder = MoviesContract.MoviesEntry.COLUMN_POPULARITY + " desc";
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        String sortOrderPreference = prefs.getString(getString(R.string.pref_sort_key),
+                getString(R.string.pref_sort_val_popularity));
+        if (sortOrderPreference.equalsIgnoreCase("Rating")) {
+            sortOrder = MoviesContract.MoviesEntry.COLUMN_RATING + " desc";
+        } else if (sortOrderPreference.equalsIgnoreCase("Favourites")) {
+            sortOrder = MoviesContract.MoviesEntry.COLUMN_FAVOURITE + " desc";
+        }
+        Log.d("COME SORTO", "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" + sortOrder);
         Uri movieUri = MoviesContract.MoviesEntry.CONTENT_URI;
-        Log.e("AAAH", "movieUri " + movieUri.toString());
         return new CursorLoader(getActivity(),
                 movieUri,
                 MOVIES_COLUMNS,
                 null,
                 null,
-                null);
+                sortOrder);
     }
 
     @Override

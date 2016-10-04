@@ -36,7 +36,6 @@ public class MovieCursorAdapter extends CursorAdapter {
      */
     @Override
     public void bindView(View view, Context context, Cursor cursor) {
-        Log.e("MERDA", "MA VENGO CHIAMATO?");
         ImageView iv = (ImageView) view;
         String base_url = "http://image.tmdb.org/t/p/w500/";
         Picasso.with(context).load(base_url + cursor.getString(MainActivityFragment.COL_IMAGE_URL))

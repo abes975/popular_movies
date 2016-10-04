@@ -27,6 +27,7 @@ public class Movie implements Parcelable {
     private static final String KEY_VOTE_AVERAGE = "vote_average";
     private static final String KEY_VOTE_COUNT = "vote_count";
     private static final String KEY_RELEASE_DATE = "release_date";
+    private static final String KEY_POPULARITY = "popularity";
 
     static final String KEY_DEFAULT_SIZE = "w185";
     static final String KEY_IMG_POSTER =  "poster";
@@ -40,9 +41,12 @@ public class Movie implements Parcelable {
     private String mPosterPath;
     private String mBackDropPath;
     private double mVoteAvg;
+    private double mPopularity;
     private long mVoteCnt;
 
-    public Movie(long id, String title, String overview, String releaseDate, String posterPath, String backdropPath, double voteAvg, long voteCnt) {
+
+    public Movie(long id, String title, String overview, String releaseDate, String posterPath,
+                 String backdropPath, double voteAvg, long voteCnt, double popularity) {
         mId = id;
         mTitle = title;
         mOverview = overview;
@@ -51,6 +55,7 @@ public class Movie implements Parcelable {
         mBackDropPath = backdropPath;
         mVoteAvg = voteAvg;
         mVoteCnt = voteCnt;
+        mPopularity = popularity;
     }
 
     public long getId() {
@@ -63,6 +68,10 @@ public class Movie implements Parcelable {
 
     public double getVoteAvg() {
         return mVoteAvg;
+    }
+
+    public double getPopularity() {
+        return mPopularity;
     }
 
     public String getTitle() {
@@ -158,8 +167,10 @@ public class Movie implements Parcelable {
         String backdropPath = movieJsonObject.getString(KEY_BACKDROP);
         double voteAvg = movieJsonObject.getDouble(KEY_VOTE_AVERAGE);
         long voteCnt = movieJsonObject.getLong(KEY_VOTE_COUNT);
+        double popularity = movieJsonObject.getDouble(KEY_POPULARITY);
 
-        Movie movie = new Movie(id, title, overview, releaseDate, posterPath, backdropPath, voteAvg, voteCnt);
+        Movie movie = new Movie(id, title, overview, releaseDate, posterPath, backdropPath,
+                voteAvg, voteCnt, popularity);
         return movie;
     }
 
