@@ -10,7 +10,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.util.Log;
 
-import org.mefistofele.hikari.popularmovies.Movie;
+import static android.icu.lang.UCharacter.GraphemeClusterBreak.L;
+import static android.webkit.ConsoleMessage.MessageLevel.LOG;
 
 /**
  * Created by seba on 04/10/16.
@@ -24,6 +25,7 @@ public class MoviesProvider extends ContentProvider {
     // Codes for the UriMatcher theese hase to be distinct...but any integer works :D
     private static final int MOVIE = 100;
     private static final int MOVIES_WITH_ID = 200;
+    private static final int MOVIES_WITH_TIMESTAMP = 201;
 
 
     private static UriMatcher buildUriMatcher(){
@@ -31,8 +33,8 @@ public class MoviesProvider extends ContentProvider {
         final String authority = MoviesContract.CONTENT_AUTHORITY;
 
         // add a code for each type of URI you want
-        matcher.addURI(authority, MoviesContract.MoviesEntry.TABLE_MOVIES, MOVIE);
-        matcher.addURI(authority, MoviesContract.MoviesEntry.TABLE_MOVIES + "/#", MOVIES_WITH_ID);
+        matcher.addURI(authority, MoviesContract.MoviesEntry.TABLE_NAME, MOVIE);
+        matcher.addURI(authority, MoviesContract.MoviesEntry.TABLE_NAME + "/#", MOVIES_WITH_ID);
 
         return matcher;
     }
@@ -54,6 +56,9 @@ public class MoviesProvider extends ContentProvider {
             case MOVIES_WITH_ID:{
                 return MoviesContract.MoviesEntry.CONTENT_ITEM_TYPE;
             }
+            case MOVIES_WITH_TIMESTAMP:{
+                return MoviesContract.MoviesEntry.CONTENT_DIR_TYPE;
+            }
             default:{
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
             }
@@ -65,9 +70,9 @@ public class MoviesProvider extends ContentProvider {
         Cursor retCursor;
         switch(sUriMatcher.match(uri)){
             // All Flavors selected
-            case MOVIE:{
+            case MOVIE: {
                 retCursor = mOpenHelper.getReadableDatabase().query(
-                        MoviesContract.MoviesEntry.TABLE_MOVIES,
+                        MoviesContract.MoviesEntry.TABLE_NAME,
                         projection,
                         selection,
                         selectionArgs,
@@ -79,9 +84,20 @@ public class MoviesProvider extends ContentProvider {
             // Individual flavor based on Movie Id selected
             case MOVIES_WITH_ID:{
                 retCursor = mOpenHelper.getReadableDatabase().query(
-                        MoviesContract.MoviesEntry.TABLE_MOVIES,
+                        MoviesContract.MoviesEntry.TABLE_NAME,
                         projection,
-                        MoviesContract.MoviesEntry.COLUMN_MOVIE_ID + " = ?",
+                        MoviesContract.MoviesEntry._ID + " = ?",
+                        new String[] {String.valueOf(ContentUris.parseId(uri))},
+                        null,
+                        null,
+                        sortOrder);
+                return retCursor;
+            }
+            case MOVIES_WITH_TIMESTAMP:{
+                retCursor = mOpenHelper.getReadableDatabase().query(
+                        MoviesContract.MoviesEntry.TABLE_NAME,
+                        projection,
+                        MoviesContract.MoviesEntry.COLUMN_TIMESTAMP + " <= ?",
                         new String[] {String.valueOf(ContentUris.parseId(uri))},
                         null,
                         null,
@@ -101,7 +117,7 @@ public class MoviesProvider extends ContentProvider {
         Uri returnUri;
         switch (sUriMatcher.match(uri)) {
             case MOVIE: {
-                long _id = db.insert(MoviesContract.MoviesEntry.TABLE_MOVIES, null, values);
+                long _id = db.insert(MoviesContract.MoviesEntry.TABLE_NAME, null, values);
                 // insert unless it is already contained in the database
                 if (_id > 0) {
                     returnUri = MoviesContract.MoviesEntry.buildMoviesUri(_id);
@@ -110,13 +126,12 @@ public class MoviesProvider extends ContentProvider {
                 }
                 break;
             }
-
             default: {
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
-
             }
         }
         getContext().getContentResolver().notifyChange(uri, null);
+        Log.d(LOG_TAG, "Insert method..returning " + returnUri.toString());
         return returnUri;
     }
 
@@ -124,76 +139,58 @@ public class MoviesProvider extends ContentProvider {
     public int delete(Uri uri, String selection, String[] selectionArgs){
         final SQLiteDatabase db = mOpenHelper.getWritableDatabase();
         final int match = sUriMatcher.match(uri);
-        int numDeleted;
+        int rowsDeleted;
         switch(match){
             case MOVIE:
-                numDeleted = db.delete(
-                        MoviesContract.MoviesEntry.TABLE_MOVIES, selection, selectionArgs);
+                rowsDeleted = db.delete(
+                        MoviesContract.MoviesEntry.TABLE_NAME, selection, selectionArgs);
                 // reset _ID
                 db.execSQL("DELETE FROM SQLITE_SEQUENCE WHERE NAME = '" +
-                        MoviesContract.MoviesEntry.TABLE_MOVIES + "'");
+                        MoviesContract.MoviesEntry.TABLE_NAME + "'");
                 break;
             case MOVIES_WITH_ID:
-                numDeleted = db.delete(MoviesContract.MoviesEntry.TABLE_MOVIES,
+                rowsDeleted = db.delete(MoviesContract.MoviesEntry.TABLE_NAME,
                         MoviesContract.MoviesEntry._ID + " = ?",
                         new String[]{String.valueOf(ContentUris.parseId(uri))});
                 // reset _ID
                 db.execSQL("DELETE FROM SQLITE_SEQUENCE WHERE NAME = '" +
-                        MoviesContract.MoviesEntry.TABLE_MOVIES + "'");
+                        MoviesContract.MoviesEntry.TABLE_NAME + "'");
 
                 break;
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
-
-        return numDeleted;
+        if (rowsDeleted != 0) {
+            getContext().getContentResolver().notifyChange(uri, null);
+        }
+        return rowsDeleted;
     }
 
     @Override
     public int bulkInsert(Uri uri, ContentValues[] values){
         final SQLiteDatabase db = mOpenHelper.getWritableDatabase();
         final int match = sUriMatcher.match(uri);
-        switch(match){
-            case MOVIE:
-                // allows for multiple transactions
-                db.beginTransaction();
 
-                // keep track of successful inserts
-                int numInserted = 0;
-                try{
-                    for(ContentValues value : values){
-                        if (value == null){
-                            throw new IllegalArgumentException("Cannot have null content values");
-                        }
-                        long _id = -1;
-                        try{
-                            _id = db.insertOrThrow(MoviesContract.MoviesEntry.TABLE_MOVIES,
-                                    null, value);
-                        }catch(SQLiteConstraintException e) {
-                            Log.w(LOG_TAG, "Attempting to insert " +
-                                    value.getAsString(
-                                            MoviesContract.MoviesEntry.COLUMN_MOVIE_ID)
-                                    + " but value is already in database.");
-                        }
-                        if (_id != -1){
-                            numInserted++;
+        switch (match) {
+            case MOVIE:
+                db.beginTransaction();
+                int returnCount = 0;
+                try {
+                    for (ContentValues value : values) {
+                        long _id = db.insertOrThrow(MoviesContract.MoviesEntry.TABLE_NAME, null, value);
+                        if (_id != -1) {
+                            returnCount++;
                         }
                     }
-                    if(numInserted > 0){
-                        // If no errors, declare a successful transaction.
-                        // database will not populate if this is not called
-                        db.setTransactionSuccessful();
-                    }
-                } finally {
-                    // all transactions occur at once
+                    db.setTransactionSuccessful();
+                } catch (SQLiteConstraintException e) {
+                    //Log.d(LOG_TAG, "We got a duplicate movie...who cares");
+                }
+                finally {
                     db.endTransaction();
                 }
-                if (numInserted > 0){
-                    // if there was successful insertion, notify the content resolver that there
-                    // was a change
-                    getContext().getContentResolver().notifyChange(uri, null);
-                }
-                return numInserted;
+                getContext().getContentResolver().notifyChange(uri, null);
+                return returnCount;
             default:
                 return super.bulkInsert(uri, values);
         }
@@ -202,24 +199,24 @@ public class MoviesProvider extends ContentProvider {
     @Override
     public int update(Uri uri, ContentValues contentValues, String selection, String[] selectionArgs){
         final SQLiteDatabase db = mOpenHelper.getWritableDatabase();
-        int numUpdated = 0;
-
+        int rowUpdated = 0;
+        Log.d(LOG_TAG, "SONO LA UPDATE ");
         if (contentValues == null){
             throw new IllegalArgumentException("Cannot have null content values");
         }
 
         switch(sUriMatcher.match(uri)){
             case MOVIE:{
-                numUpdated = db.update(MoviesContract.MoviesEntry.TABLE_MOVIES,
+                rowUpdated = db.update(MoviesContract.MoviesEntry.TABLE_NAME,
                         contentValues,
                         selection,
                         selectionArgs);
                 break;
             }
             case MOVIES_WITH_ID: {
-                numUpdated = db.update(MoviesContract.MoviesEntry.TABLE_MOVIES,
+                rowUpdated = db.update(MoviesContract.MoviesEntry.TABLE_NAME,
                         contentValues,
-                        MoviesContract.MoviesEntry.COLUMN_MOVIE_ID + " = ?",
+                        MoviesContract.MoviesEntry._ID + " = ?",
                         new String[] {String.valueOf(ContentUris.parseId(uri))});
                 break;
             }
@@ -228,11 +225,11 @@ public class MoviesProvider extends ContentProvider {
             }
         }
 
-        if (numUpdated > 0){
+        if (rowUpdated != 0){
             getContext().getContentResolver().notifyChange(uri, null);
         }
 
-        return numUpdated;
+        return rowUpdated;
     }
 
 }

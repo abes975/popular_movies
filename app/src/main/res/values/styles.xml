@@ -11,4 +11,10 @@
         <item name="android:textSize">24sp</item>
         <item name="android:textColor">#FF11FF</item>
     </style>
+    <style name="FavouriteButton">
+        <item name="android:textSize">18sp</item>
+        <item name="android:textColor">#FF1100</item>
+        <item name="android:padding">8dp</item>
+        <item name="android:background">#00A1AA</item>
+    </style>
 </resources>

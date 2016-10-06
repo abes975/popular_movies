@@ -5,7 +5,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
-import org.mefistofele.hikari.popularmovies.Movie;
+import static android.os.Build.ID;
 
 /**
  * Created by seba on 04/10/16.
@@ -26,10 +26,10 @@ public class MoviesDBHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
         final String SQL_CREATE_MOVIE_TABLE = "CREATE TABLE " +
-                MoviesContract.MoviesEntry.TABLE_MOVIES + "(" +
-                MoviesContract.MoviesEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                MoviesContract.MoviesEntry.TABLE_NAME + "(" +
+                //MoviesContract.MoviesEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                MoviesContract.MoviesEntry._ID + " INTEGER PRIMARY KEY, " +
                 MoviesContract.MoviesEntry.COLUMN_TIMESTAMP + " TEXT NOT NULL, " +
-                MoviesContract.MoviesEntry.COLUMN_MOVIE_ID + " INTEGER NOT NULL UNIQUE, " +
                 MoviesContract.MoviesEntry.COLUMN_TITLE + " TEXT NOT NULL, " +
                 MoviesContract.MoviesEntry.COLUMN_RELEASE_DATE + " TEXT, " +
                 MoviesContract.MoviesEntry.COLUMN_RATING + " REAL, " +
@@ -47,9 +47,9 @@ public class MoviesDBHelper extends SQLiteOpenHelper {
         Log.w(LOG_TAG, "Upgrading database from version " + oldVersion + " to " +
                 newVersion + ". OLD DATA WILL BE DESTROYED");
         // Drop the table
-        sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + MoviesContract.MoviesEntry.TABLE_MOVIES);
+        sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + MoviesContract.MoviesEntry.TABLE_NAME);
         sqLiteDatabase.execSQL("DELETE FROM SQLITE_SEQUENCE WHERE NAME = '" +
-                MoviesContract.MoviesEntry.TABLE_MOVIES + "'");
+                MoviesContract.MoviesEntry.TABLE_NAME + "'");
 
         // re-create database
         onCreate(sqLiteDatabase);

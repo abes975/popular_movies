@@ -1,15 +1,19 @@
 package org.mefistofele.hikari.popularmovies;
 
+import android.content.ContentUris;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.content.Loader;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.net.Uri;
+import android.os.CountDownTimer;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -26,14 +30,14 @@ import static org.mefistofele.hikari.popularmovies.R.id.text_view_sysnopsis;
 public class MovieDetailActivity extends AppCompatActivity {
 
     private static final String LOG_TAG = MovieDetailActivity.class.getSimpleName();
-    private static final int DETAIL_LOADER = 0;
     // Filter
     private static final String[] DETAIL_COLUMNS = {
             MoviesContract.MoviesEntry.COLUMN_IMAGE_URL,
             MoviesContract.MoviesEntry.COLUMN_OVERVIEW,
             MoviesContract.MoviesEntry.COLUMN_RATING,
             MoviesContract.MoviesEntry.COLUMN_RELEASE_DATE,
-            MoviesContract.MoviesEntry.COLUMN_TITLE
+            MoviesContract.MoviesEntry.COLUMN_TITLE,
+            MoviesContract.MoviesEntry.COLUMN_FAVOURITE
     };
 
 
@@ -44,6 +48,7 @@ public class MovieDetailActivity extends AppCompatActivity {
     static final int COL_RATING = 2;
     static final int COL_RELEASE_DATE = 3;
     static final int COL_TITLE = 4;
+    static final int COL_FAVOURITE = 5;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,19 +57,22 @@ public class MovieDetailActivity extends AppCompatActivity {
         String movieSize = "w500";
         Intent intent = getIntent();
         String movieStringlUri = intent.getStringExtra("MOVIE_DETAIL_URI");
-        Log.d(LOG_TAG, "Passed uri " + movieStringlUri);
-        Uri detailUri = Uri.parse(movieStringlUri);
+        //Log.d(LOG_TAG, "Passed uri " + movieStringlUri);
+        final Uri detailUri = Uri.parse(movieStringlUri);
         // Get data from Content Provider
         Cursor movieDetailCursor = getContentResolver().query(detailUri,
                 DETAIL_COLUMNS,
                 null,
                 null,
                 null);
-        Log.d(LOG_TAG, DatabaseUtils.dumpCursorToString(movieDetailCursor));
+
+        //Log.d(LOG_TAG, DatabaseUtils.dumpCursorToString(movieDetailCursor));
+
         if (movieDetailCursor.getCount() != 0) {
             movieDetailCursor.moveToFirst();
             TextView title = (TextView) findViewById(R.id.text_view_title);
-            title.setText(movieDetailCursor.getString(COL_TITLE));
+            String titleValue = movieDetailCursor.getString(COL_TITLE);
+            title.setText(titleValue);
             TextView releaseDate = (TextView) findViewById(R.id.text_view_release_date);
             releaseDate.setText(movieDetailCursor.getString(COL_RELEASE_DATE));
             TextView rating = (TextView) findViewById(R.id.text_view_rating);
@@ -74,11 +82,36 @@ public class MovieDetailActivity extends AppCompatActivity {
             Picasso.with(this).load(base_url + movieDetailCursor.getString(COL_IMAGE_URL))
                     .placeholder(R.drawable.movie_placeholder)
                     .error(R.drawable.error_placeholder)
-                    .fit()
-                    .centerInside()
                     .into(poster);
             TextView synopsis = (TextView) findViewById(R.id.text_view_sysnopsis);
             synopsis.setText(movieDetailCursor.getString(COL_OVERVIEW));
+            final int favourite = movieDetailCursor.getInt(COL_FAVOURITE);
+            final TextView favourites = (TextView) findViewById(R.id.toggle_favourites);
+            if (favourite == 1)
+                favourites.setText(getResources().getString(R.string.remove_from_favourites));
+            else
+                favourites.setText(getResources().getString(R.string.add_to_favourites));
+
+            final ContentValues movieCV = new ContentValues();
+            movieCV.put(MoviesContract.MoviesEntry._ID, ContentUris.parseId(detailUri));
+            // Let's complement the values of favourite if the button will be clicked :D
+            movieCV.put(MoviesContract.MoviesEntry.COLUMN_FAVOURITE, favourite == 1 ? 0 :1 );
+            favourites.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    getContentResolver().update(detailUri,
+                            movieCV,
+                            null,
+                            null);
+                    movieCV.put(MoviesContract.MoviesEntry.COLUMN_FAVOURITE, favourite == 1 ? 0 :1 );
+                    if (movieCV.getAsInteger(MoviesContract.MoviesEntry.COLUMN_FAVOURITE) == 1) {
+                        favourites.setText(getResources().getString(R.string.remove_from_favourites));
+                    }
+                    else {
+                        favourites.setText(getResources().getString(R.string.add_to_favourites));
+                    }
+                }
+            });
 
         }
     }

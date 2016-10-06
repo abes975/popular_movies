@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
+import android.provider.ContactsContract;
 import android.support.v4.widget.CursorAdapter;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.util.Log;
@@ -28,6 +29,7 @@ public class MovieCursorAdapter extends CursorAdapter {
     private static final String LOG_TAG = MovieCursorAdapter.class.getSimpleName();
 
     public MovieCursorAdapter(Context context, Cursor c, int flags) {
+
         super(context, c, flags);
     }
     /*
@@ -44,6 +46,7 @@ public class MovieCursorAdapter extends CursorAdapter {
      */
     @Override
     public void bindView(View view, Context context, final Cursor cursor) {
+        //Log.d(LOG_TAG, "Dentro BindView " + DatabaseUtils.dumpCursorToString(cursor));
         ImageView moviePoster = (ImageView) view;
         String base_url = "http://image.tmdb.org/t/p/w500/";
         Picasso.with(context).load(base_url + cursor.getString(MainActivityFragment.COL_IMAGE_URL))
@@ -52,18 +55,5 @@ public class MovieCursorAdapter extends CursorAdapter {
                 .fit()
                 .centerInside()
                 .into(moviePoster);
-        Log.d(LOG_TAG, "strano " + new Long(cursor.getLong(MainActivityFragment.COL_MOVIE_ID)).toString() );
-        moviePoster.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String detailMovieUri = MoviesContract.MoviesEntry.buildMoviesUri(
-                        cursor.getLong(MainActivityFragment.COL_MOVIE_ID)).toString();
-                Log.d(LOG_TAG, "quale url ti passo" + detailMovieUri);
-                Intent detailIntent =
-                        new Intent(view.getContext(), MovieDetailActivity.class);
-                detailIntent.putExtra("MOVIE_DETAIL_URI", detailMovieUri);
-                view.getContext().startActivity(detailIntent);
-            }
-        });
     }
 }

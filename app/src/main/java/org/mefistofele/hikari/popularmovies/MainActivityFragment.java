@@ -3,6 +3,7 @@ package org.mefistofele.hikari.popularmovies;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -17,37 +18,38 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.GridLayout;
 import android.widget.GridView;
 import android.widget.ListView;
 
 import org.mefistofele.hikari.popularmovies.data.MoviesContract;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.SortedMap;
 
 import static android.R.attr.id;
 import static android.os.Build.VERSION_CODES.M;
+import static android.webkit.ConsoleMessage.MessageLevel.LOG;
+import static org.mefistofele.hikari.popularmovies.data.MoviesDBHelper.LOG_TAG;
 
 /**
  * Created by seba on 04/10/16.
  */
 
 public class MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
-    private static final int MOVIE_LOADER = 0;
-    // Filter
-    private static final String[] MOVIES_COLUMNS = {
-            MoviesContract.MoviesEntry._ID,
-            MoviesContract.MoviesEntry.COLUMN_IMAGE_URL,
-            MoviesContract.MoviesEntry.COLUMN_MOVIE_ID
-    };
-
-
     // These indices are tied to FORECAST_COLUMNS.  If FORECAST_COLUMNS changes, these
     // must change.
     static final int COL_ID = 0;
     static final int COL_IMAGE_URL = 1;
-    static final int COL_MOVIE_ID = 2;
-
+    private static final int MOVIE_LOADER = 0;
+    // Filter
+    private static final String[] MOVIES_COLUMNS = {
+            MoviesContract.MoviesEntry._ID,
+            MoviesContract.MoviesEntry.COLUMN_IMAGE_URL
+    };
 
     private MovieCursorAdapter mMoviesAdapter;
 
@@ -83,7 +85,7 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // The CursorAdapter will take data from our cursor and populate the ListView.
+        // The CursorAdapter will take data from our cursor and populate the ListView
         mMoviesAdapter = new MovieCursorAdapter(getActivity(), null, 0);
 
         View rootView = inflater.inflate(R.layout.main_activity_fragment, container, false);
@@ -92,6 +94,24 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
         GridView gridView = (GridView) rootView.findViewById(R.id.movie_grid_view);
         gridView.setAdapter(mMoviesAdapter);
 
+
+        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
+                // CursorAdapter returns a cursor at the correct position for getItem(), or null
+                // if it cannot seek to that position.
+                Cursor cursor = (Cursor) adapterView.getItemAtPosition(position);
+                if (cursor != null) {
+                    String detailMovieUri = MoviesContract.MoviesEntry.buildMoviesUri(
+                            cursor.getLong(MainActivityFragment.COL_ID)).toString();
+                    Intent detailIntent =
+                            new Intent(view.getContext(), MovieDetailActivity.class);
+                    detailIntent.putExtra("MOVIE_DETAIL_URI", detailMovieUri);
+                    startActivity(detailIntent);
+                }
+            }
+        });
         return rootView;
     }
 
@@ -111,31 +131,42 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
 
     @Override
     public void onStart() {
+        getLoaderManager().restartLoader(MOVIE_LOADER, null, this);
+        //Log.d(LOG_TAG, "On start called");
         super.onStart();
         updateMovies();
     }
 
+
     public void onResume() {
-        getLoaderManager().initLoader(MOVIE_LOADER, null, this);
+        //Log.d(LOG_TAG, "On resume called");
+        getLoaderManager().restartLoader(MOVIE_LOADER, null, this);
         super.onResume();
         updateMovies();
     }
 
+
     @Override
     public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
-        String sortOrder = MoviesContract.MoviesEntry.COLUMN_POPULARITY + " desc";
+        // Sort order choose it with user preferences
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
         String sortOrderPreference = prefs.getString(getString(R.string.pref_sort_key),
                 getString(R.string.pref_sort_val_popularity));
+        Uri moviesUri = MoviesContract.MoviesEntry.CONTENT_URI;
+        String sortOrder = MoviesContract.MoviesEntry.COLUMN_POPULARITY + " desc";
         if (sortOrderPreference.equalsIgnoreCase("Rating")) {
             sortOrder = MoviesContract.MoviesEntry.COLUMN_RATING + " desc";
         } else if (sortOrderPreference.equalsIgnoreCase("Favourites")) {
             sortOrder = MoviesContract.MoviesEntry.COLUMN_FAVOURITE + " desc";
+            return new CursorLoader(getActivity(),
+                    moviesUri,
+                    MOVIES_COLUMNS,
+                    new String("favourite = 1"),
+                    null,
+                    sortOrder);
         }
-        Log.d("COME SORTO", "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" + sortOrder);
-        Uri movieUri = MoviesContract.MoviesEntry.CONTENT_URI;
         return new CursorLoader(getActivity(),
-                movieUri,
+                moviesUri,
                 MOVIES_COLUMNS,
                 null,
                 null,
@@ -144,13 +175,11 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
 
     @Override
     public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
-        Log.e("CUR FIN", "CURSOR ONLOAD FINISHED");
         mMoviesAdapter.swapCursor(cursor);
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> cursorLoader) {
-        Log.e("CUR FIN", "CURSOR ONLOAD RESET");
         mMoviesAdapter.swapCursor(null);
     }
 }

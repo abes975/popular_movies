@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getTargetContext();
 
-        assertEquals("org.mefistofele.hikari.popolarmovies", appContext.getPackageName());
+        assertEquals("org.mefistofele.hikari.popularmovies", appContext.getPackageName());
     }
 }

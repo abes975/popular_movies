@@ -38,6 +38,12 @@
                 tools:text="@string/rating_placeholder"
                 android:layout_height="wrap_content"
                 android:layout_width="match_parent"/>
+            <TextView
+                style="@style/FavouriteButton"
+                android:id="@+id/toggle_favourites"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:text="@string/add_to_favourites"/>
 
         </LinearLayout>
         <ImageView

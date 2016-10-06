@@ -155,7 +155,7 @@ public class FetchMovieAsyncTask extends AsyncTask<String, Void, Void> {
             Movie movie = Movie.parseJasonData(movieObj);
             // Create a content value with parsed result
             ContentValues movieCV = new ContentValues();
-            movieCV.put(MoviesEntry.COLUMN_MOVIE_ID, movie.getId());
+            movieCV.put(MoviesEntry._ID, movie.getId());
             movieCV.put(MoviesEntry.COLUMN_TITLE, movie.getTitle());
             movieCV.put(MoviesEntry.COLUMN_RELEASE_DATE, movie.getReleaseDate());
             movieCV.put(MoviesEntry.COLUMN_RATING, movie.getVoteAvg());
