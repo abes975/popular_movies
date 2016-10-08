@@ -12,9 +12,9 @@
     <string name="pref_sort_label_rating">Rating</string>
     <string name="pref_sort_label_popularity">Popularity</string>
     <string name="pref_sort_label_favourites">Favourites</string>
-    <string name="pref_sort_val_rating">Rating</string>
-    <string name="pref_sort_val_popularity">Popularity</string>
-    <string name="pref_sort_val_favourites">Favourites</string>
-    <string name="perf_sort_label">Sort order</string>
-    <string name="pref_sort_key">sort_key</string>
+    <string name="pref_sort_val_rating" translatable="false">Rating</string>
+    <string name="pref_sort_val_popularity" translatable="false">Popularity</string>
+    <string name="pref_sort_val_favourites" translatable="false">Favourites</string>
+    <string name="perf_sort_label" translatable="false">Sort order</string>
+    <string name="pref_sort_key" translatable="false">sort_key</string>
 </resources>

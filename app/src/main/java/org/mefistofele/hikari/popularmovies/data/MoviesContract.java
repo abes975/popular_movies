@@ -9,17 +9,17 @@ import android.provider.BaseColumns;
  * Created by seba on 04/10/16.
  */
 
-public class MoviesContract {
+final public class MoviesContract {
     public static final String CONTENT_AUTHORITY = "org.mefistofele.hikari.popularmovies";
 
     public static final Uri BASE_CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY);
 
+    private MoviesContract(){}
 
     public static final class MoviesEntry implements BaseColumns {
         // table name
         public static final String TABLE_NAME = "movies";
         // columns
-        //public static final String _ID = "_id";
         public static final String _ID = "_id";
         public static final String COLUMN_TIMESTAMP = "timestamp";
         public static final String COLUMN_TITLE = "title";

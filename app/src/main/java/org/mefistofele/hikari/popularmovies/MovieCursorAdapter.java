@@ -25,6 +25,7 @@ import static org.mefistofele.hikari.popularmovies.data.MoviesDBHelper.LOG_TAG;
  * Created by seba on 04/10/16.
  */
 
+
 public class MovieCursorAdapter extends CursorAdapter {
     private static final String LOG_TAG = MovieCursorAdapter.class.getSimpleName();
 
@@ -49,6 +50,7 @@ public class MovieCursorAdapter extends CursorAdapter {
         //Log.d(LOG_TAG, "Dentro BindView " + DatabaseUtils.dumpCursorToString(cursor));
         ImageView moviePoster = (ImageView) view;
         String base_url = "http://image.tmdb.org/t/p/w500/";
+        moviePoster.setAdjustViewBounds(true);
         Picasso.with(context).load(base_url + cursor.getString(MainActivityFragment.COL_IMAGE_URL))
                 .placeholder(R.drawable.movie_placeholder)
                 .error(R.drawable.error_placeholder)

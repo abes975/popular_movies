@@ -1,5 +1,6 @@
 package org.mefistofele.hikari.popularmovies;
 
+import android.content.ContentValues;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -22,13 +23,16 @@ import android.widget.AdapterView;
 import android.widget.GridLayout;
 import android.widget.GridView;
 import android.widget.ListView;
+import android.widget.ScrollView;
 
 import org.mefistofele.hikari.popularmovies.data.MoviesContract;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.SortedMap;
+import java.util.Vector;
 
 import static android.R.attr.id;
 import static android.os.Build.VERSION_CODES.M;
@@ -39,7 +43,7 @@ import static org.mefistofele.hikari.popularmovies.data.MoviesDBHelper.LOG_TAG;
  * Created by seba on 04/10/16.
  */
 
-public class MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
+public class MainActivityFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>, OnTaskCompleted<List<Movie>> {
     // These indices are tied to FORECAST_COLUMNS.  If FORECAST_COLUMNS changes, these
     // must change.
     static final int COL_ID = 0;
@@ -121,9 +125,11 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
         super.onActivityCreated(savedInstanceState);
     }
 
+
     private void updateMovies() {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
         FetchMovieAsyncTask fetchMovieAsyncTask = new FetchMovieAsyncTask(getContext());
+        fetchMovieAsyncTask.setTaskCompletedListener(this);
         String sortOrder = prefs.getString(getString(R.string.pref_sort_key),
                 getString(R.string.pref_sort_val_popularity));
         fetchMovieAsyncTask.execute(sortOrder);
@@ -143,6 +149,40 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
         getLoaderManager().restartLoader(MOVIE_LOADER, null, this);
         super.onResume();
         updateMovies();
+    }
+
+
+    @Override
+    public void onTaskCompleted(List<Movie> movies) {
+
+        Vector<ContentValues> moviesContentValues = new Vector<ContentValues>(movies.size());
+        SimpleDateFormat s = new SimpleDateFormat("ddMMyyyyhhmmss");
+        String timestamp = s.format(new Date());
+
+        for(Movie movie: movies){
+            // Create a content value with parsed result
+            ContentValues movieCV = new ContentValues();
+            movieCV.put(MoviesContract.MoviesEntry._ID, movie.getId());
+            movieCV.put(MoviesContract.MoviesEntry.COLUMN_TITLE, movie.getTitle());
+            movieCV.put(MoviesContract.MoviesEntry.COLUMN_RELEASE_DATE, movie.getReleaseDate());
+            movieCV.put(MoviesContract.MoviesEntry.COLUMN_RATING, movie.getVoteAvg());
+            movieCV.put(MoviesContract.MoviesEntry.COLUMN_IMAGE_URL, movie.getPosterPath());
+            movieCV.put(MoviesContract.MoviesEntry.COLUMN_TIMESTAMP, timestamp);
+            movieCV.put(MoviesContract.MoviesEntry.COLUMN_OVERVIEW, movie.getOverview());
+            movieCV.put(MoviesContract.MoviesEntry.COLUMN_POPULARITY, movie.getPopularity());
+            moviesContentValues.add(movieCV);
+        }
+
+        int inserted = 0;
+        // add to database
+        if (moviesContentValues.size() > 0 ) {
+            ContentValues[] cvArray = new ContentValues[moviesContentValues.size()];
+            moviesContentValues.toArray(cvArray);
+            inserted = getContext().getContentResolver()
+                    .bulkInsert(MoviesContract.MoviesEntry.CONTENT_URI, cvArray);
+        }
+        Log.d(LOG_TAG, "Record inserted Complete. " + inserted + " Inserted");
+        getLoaderManager().restartLoader(MOVIE_LOADER, null, this);
     }
 
 

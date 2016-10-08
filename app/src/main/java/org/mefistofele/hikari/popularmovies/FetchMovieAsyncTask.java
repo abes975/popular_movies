@@ -31,19 +31,27 @@ import java.util.Vector;
  * Created by seba on 11/09/16.
  */
 
-public class FetchMovieAsyncTask extends AsyncTask<String, Void, Void> {
+public class FetchMovieAsyncTask extends AsyncTask<String, Void, List<Movie>> {
     /* Download data from Movie Db */
     private final String LOG_TAG = FetchMovieAsyncTask.class.getSimpleName();
+    private OnTaskCompleted<List<Movie>> mOnTaskCompleted;
 
     private final Context mContext;
 
     public FetchMovieAsyncTask(Context context) {
+
         mContext = context;
     }
 
 
+    /* Sets the listener*/
+    public void setTaskCompletedListener(OnTaskCompleted onTaskCompleted){
+        mOnTaskCompleted = onTaskCompleted;
+    }
+
+
     @Override
-    protected Void doInBackground(String... params) {
+    protected List<Movie> doInBackground(String... params) {
 
         if (params.length == 0) {
             return null;
@@ -124,7 +132,7 @@ public class FetchMovieAsyncTask extends AsyncTask<String, Void, Void> {
         }
 
         try {
-            getMovieDataFromJson(movieData);
+            return getMovieDataFromJson(movieData);
 
         } catch (JSONException e) {
             Log.e(LOG_TAG, e.getMessage(), e);
@@ -134,45 +142,27 @@ public class FetchMovieAsyncTask extends AsyncTask<String, Void, Void> {
     }
 
 
-    private void getMovieDataFromJson(String downloadedData) throws JSONException {
-
+    private List<Movie> getMovieDataFromJson(String downloadedData) throws JSONException {
         // These are the names of the JSON objects that need to be extracted.
         final String MDB_LIST = "results";
 
         JSONObject forecastJson = new JSONObject(downloadedData);
         JSONArray moviesArray = forecastJson.getJSONArray(MDB_LIST);
 
-
-        Vector<ContentValues> moviesContentValues = new Vector<ContentValues>(moviesArray.length());
-
-
-        SimpleDateFormat s = new SimpleDateFormat("ddMMyyyyhhmmss");
-        String timestamp = s.format(new Date());
-
+        ArrayList<Movie> movies = new ArrayList<Movie>();
         for (int i = 0; i < moviesArray.length(); i++) {
             JSONObject movieObj = moviesArray.getJSONObject(i);
-            // Parsing network data
-            Movie movie = Movie.parseJasonData(movieObj);
-            // Create a content value with parsed result
-            ContentValues movieCV = new ContentValues();
-            movieCV.put(MoviesEntry._ID, movie.getId());
-            movieCV.put(MoviesEntry.COLUMN_TITLE, movie.getTitle());
-            movieCV.put(MoviesEntry.COLUMN_RELEASE_DATE, movie.getReleaseDate());
-            movieCV.put(MoviesEntry.COLUMN_RATING, movie.getVoteAvg());
-            movieCV.put(MoviesEntry.COLUMN_IMAGE_URL, movie.getPosterPath());
-            movieCV.put(MoviesEntry.COLUMN_TIMESTAMP, timestamp);
-            movieCV.put(MoviesEntry.COLUMN_OVERVIEW, movie.getOverview());
-            movieCV.put(MoviesEntry.COLUMN_POPULARITY, movie.getPopularity());
-            moviesContentValues.add(movieCV);
-        }
-        int inserted = 0;
-        // add to database
-        if (moviesContentValues.size() > 0 ) {
-            ContentValues[] cvArray = new ContentValues[moviesContentValues.size()];
-            moviesContentValues.toArray(cvArray);
-            inserted = mContext.getContentResolver().bulkInsert(MoviesEntry.CONTENT_URI, cvArray);
+            Movie movie = Movie.parseJasonData(movieObj);;
+            movies.add(movie);
         }
 
-        Log.d(LOG_TAG, "FetchMovieTask Complete. " + inserted + " Inserted");
+        return movies;
+    }
+
+    @Override
+    protected void onPostExecute(List<Movie> movies) {
+        super.onPostExecute(movies);
+
+        mOnTaskCompleted.onTaskCompleted(movies);
     }
 }

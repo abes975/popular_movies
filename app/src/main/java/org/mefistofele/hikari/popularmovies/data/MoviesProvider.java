@@ -25,7 +25,6 @@ public class MoviesProvider extends ContentProvider {
     // Codes for the UriMatcher theese hase to be distinct...but any integer works :D
     private static final int MOVIE = 100;
     private static final int MOVIES_WITH_ID = 200;
-    private static final int MOVIES_WITH_TIMESTAMP = 201;
 
 
     private static UriMatcher buildUriMatcher(){
@@ -56,9 +55,6 @@ public class MoviesProvider extends ContentProvider {
             case MOVIES_WITH_ID:{
                 return MoviesContract.MoviesEntry.CONTENT_ITEM_TYPE;
             }
-            case MOVIES_WITH_TIMESTAMP:{
-                return MoviesContract.MoviesEntry.CONTENT_DIR_TYPE;
-            }
             default:{
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
             }
@@ -87,17 +83,6 @@ public class MoviesProvider extends ContentProvider {
                         MoviesContract.MoviesEntry.TABLE_NAME,
                         projection,
                         MoviesContract.MoviesEntry._ID + " = ?",
-                        new String[] {String.valueOf(ContentUris.parseId(uri))},
-                        null,
-                        null,
-                        sortOrder);
-                return retCursor;
-            }
-            case MOVIES_WITH_TIMESTAMP:{
-                retCursor = mOpenHelper.getReadableDatabase().query(
-                        MoviesContract.MoviesEntry.TABLE_NAME,
-                        projection,
-                        MoviesContract.MoviesEntry.COLUMN_TIMESTAMP + " <= ?",
                         new String[] {String.valueOf(ContentUris.parseId(uri))},
                         null,
                         null,
