@@ -23,11 +23,17 @@ import com.squareup.picasso.Picasso;
 import org.mefistofele.hikari.popularmovies.data.MoviesContract;
 import org.w3c.dom.Text;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.Vector;
+
 import static android.R.attr.id;
 import static android.R.attr.rating;
+import static org.mefistofele.hikari.popularmovies.R.drawable.trailer;
 import static org.mefistofele.hikari.popularmovies.R.id.text_view_sysnopsis;
 
-public class MovieDetailActivity extends AppCompatActivity {
+public class MovieDetailActivity extends AppCompatActivity implements OnTaskCompleted<List<String>> {
 
     private static final String LOG_TAG = MovieDetailActivity.class.getSimpleName();
     // Filter
@@ -54,11 +60,12 @@ public class MovieDetailActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_movie_detail);
-        String movieSize = "w500";
+        //String movieSize = "w500";
         Intent intent = getIntent();
         String movieStringlUri = intent.getStringExtra("MOVIE_DETAIL_URI");
         //Log.d(LOG_TAG, "Passed uri " + movieStringlUri);
         final Uri detailUri = Uri.parse(movieStringlUri);
+        long movieID = ContentUris.parseId(detailUri);
         // Get data from Content Provider
         Cursor movieDetailCursor = getContentResolver().query(detailUri,
                 DETAIL_COLUMNS,
@@ -85,6 +92,18 @@ public class MovieDetailActivity extends AppCompatActivity {
                     .into(poster);
             TextView synopsis = (TextView) findViewById(R.id.text_view_sysnopsis);
             synopsis.setText(movieDetailCursor.getString(COL_OVERVIEW));
+
+            FetchMovieTrailerAsyncTask movieTrailer = new FetchMovieTrailerAsyncTask(this);
+            movieTrailer.setTaskCompletedListener(this);
+            movieTrailer.execute(new Long(movieID).toString());
+            ImageView trailer = (ImageView) findViewById(R.id.trailer_imageview);
+        /*    trailer.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent viewTrailer = )
+                }
+            });*/
+
             final int favourite = movieDetailCursor.getInt(COL_FAVOURITE);
             final TextView favourites = (TextView) findViewById(R.id.toggle_favourites);
             if (favourite == 1)
@@ -93,18 +112,21 @@ public class MovieDetailActivity extends AppCompatActivity {
                 favourites.setText(getResources().getString(R.string.add_to_favourites));
 
             final ContentValues movieCV = new ContentValues();
-            movieCV.put(MoviesContract.MoviesEntry._ID, ContentUris.parseId(detailUri));
+            movieCV.put(MoviesContract.MoviesEntry._ID, movieID);
             // Let's complement the values of favourite if the button will be clicked :D
-            movieCV.put(MoviesContract.MoviesEntry.COLUMN_FAVOURITE, favourite == 1 ? 0 :1 );
+
             favourites.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    ContentValues localCV = new ContentValues(movieCV);
+                    localCV.put(MoviesContract.MoviesEntry.COLUMN_FAVOURITE, favourite == 1 ? 0 :1 );
                     getContentResolver().update(detailUri,
-                            movieCV,
+                            localCV,
                             null,
                             null);
-                    movieCV.put(MoviesContract.MoviesEntry.COLUMN_FAVOURITE, favourite == 1 ? 0 :1 );
-                    if (movieCV.getAsInteger(MoviesContract.MoviesEntry.COLUMN_FAVOURITE) == 1) {
+                    int localFavourite = localCV.getAsInteger(MoviesContract.MoviesEntry.COLUMN_FAVOURITE);
+                    Log.d(LOG_TAG, "ma quanto cazzo vali " + new Integer(localFavourite).toString());
+                    if (localCV.getAsInteger(MoviesContract.MoviesEntry.COLUMN_FAVOURITE) == 1) {
                         favourites.setText(getResources().getString(R.string.remove_from_favourites));
                     }
                     else {
@@ -113,7 +135,28 @@ public class MovieDetailActivity extends AppCompatActivity {
                 }
             });
 
+
+
         }
+
+    }
+
+    public void onTaskCompleted(List<String> trailers) {
+        Log.d(LOG_TAG, "trailers " + trailers.toArray().toString());
+        ImageView trailer = (ImageView) findViewById(R.id.trailer_imageview);
+        if (trailers.size() > 0) {
+            final List<String> results = trailers;
+            trailer.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    String videoPath = "http://www.youtube.com/watch?v=" + results.get(0);
+                    Intent viewTrailer = new Intent(Intent.ACTION_VIEW,
+                            Uri.parse(videoPath));
+                    startActivity(viewTrailer);
+                }
+            });
+        } else
+            trailer.setImageResource(R.drawable.no_trailer);
     }
 
 }

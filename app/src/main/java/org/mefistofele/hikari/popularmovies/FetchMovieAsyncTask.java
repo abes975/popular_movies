@@ -66,7 +66,7 @@ public class FetchMovieAsyncTask extends AsyncTask<String, Void, List<Movie>> {
         String rating = "vote_average.desc";
         try {
 
-            // Construct the URL for the Guardian News query
+            // Construct the URL for Movie DB
             final String MOVIE_BASE_URL = "https://api.themoviedb.org/3/discover/movie?";
             //   /discover/movie?sort_by=popularity.desc
             // /discover/movie/?certification_country=US&certification=R&sort_by=vote_average.desc

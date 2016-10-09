@@ -17,4 +17,12 @@
     <string name="pref_sort_val_favourites" translatable="false">Favourites</string>
     <string name="perf_sort_label" translatable="false">Sort order</string>
     <string name="pref_sort_key" translatable="false">sort_key</string>
+    <string name="view_trailer">Trailer</string>
+    <string name="view_review">Reviews</string>
+    <string name="release_date">Release Date</string>
+    <string name="rating">Rating</string>
+    <string name="synopsis">Synopsis</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>
