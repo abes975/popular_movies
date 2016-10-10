@@ -19,15 +19,18 @@ public class MainActivity extends AppCompatActivity {
 
 
     private final String LOG_TAG = MainActivity.class.getSimpleName();
+    private Boolean mTwoPane = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        if (savedInstanceState == null) {
-            getSupportFragmentManager().beginTransaction()
-                    .add(R.id.container, new MainActivityFragment())
-                    .commit();
+        if(findViewById(R.id.movie_detail_container)!= null) {
+            mTwoPane = true;
+            MovieDetailFragment detailFragment = new MovieDetailFragment();
+            getSupportFragmentManager().beginTransaction().replace(R.id.movie_detail_container, detailFragment).commit();
+        }  else {
+            mTwoPane = false;
         }
     }
 }

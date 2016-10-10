@@ -7,8 +7,8 @@
     <string name="synopsis_placeholder">Synopsys</string>
     <string name="settings_menu">Settings</string>
     <string name="title_movie_details">Movie Details</string>
-    <string name="add_to_favourites">Add to Favourites</string>
-    <string name="remove_from_favourites">Remove from Favourites</string>
+    <string name="add_to_favourites">Favourite</string>
+    <string name="remove_from_favourites">Not Favourite</string>
     <string name="pref_sort_label_rating">Rating</string>
     <string name="pref_sort_label_popularity">Popularity</string>
     <string name="pref_sort_label_favourites">Favourites</string>
@@ -24,4 +24,5 @@
     <string name="synopsis">Synopsis</string>
     <string name="no_trailers_available">No trailer available so far</string>
     <string name="no_reviews_available">No reviews available so far</string>
+
 </resources>
