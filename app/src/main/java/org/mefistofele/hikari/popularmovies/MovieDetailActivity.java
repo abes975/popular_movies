@@ -14,6 +14,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -24,12 +25,16 @@ import org.mefistofele.hikari.popularmovies.data.MoviesContract;
 import org.w3c.dom.Text;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Vector;
 
 import static android.R.attr.id;
 import static android.R.attr.rating;
+import static android.icu.lang.UCharacter.GraphemeClusterBreak.T;
+import static android.os.Build.VERSION_CODES.N;
+import static java.security.AccessController.getContext;
 import static org.mefistofele.hikari.popularmovies.R.drawable.trailer;
 import static org.mefistofele.hikari.popularmovies.R.id.text_view_sysnopsis;
 
@@ -46,6 +51,9 @@ public class MovieDetailActivity extends AppCompatActivity implements OnTaskComp
             MoviesContract.MoviesEntry.COLUMN_FAVOURITE
     };
 
+    private static final String[] FAVOURITE_COLUMNS = {
+            MoviesContract.MoviesEntry.COLUMN_FAVOURITE
+    };
 
     // These indices are tied to FORECAST_COLUMNS.  If FORECAST_COLUMNS changes, these
     // must change.
@@ -93,40 +101,53 @@ public class MovieDetailActivity extends AppCompatActivity implements OnTaskComp
             TextView synopsis = (TextView) findViewById(R.id.text_view_sysnopsis);
             synopsis.setText(movieDetailCursor.getString(COL_OVERVIEW));
 
+
             FetchMovieTrailerAsyncTask movieTrailer = new FetchMovieTrailerAsyncTask(this);
             movieTrailer.setTaskCompletedListener(this);
             movieTrailer.execute(new Long(movieID).toString());
-            ImageView trailer = (ImageView) findViewById(R.id.trailer_imageview);
-        /*    trailer.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Intent viewTrailer = )
-                }
-            });*/
 
-            final int favourite = movieDetailCursor.getInt(COL_FAVOURITE);
+            ArrayList<String> reviews = new ArrayList<String>();
+            ArrayAdapter<String> reviewArrayAdapter =new ArrayAdapter<String> (this,R.layout.review_details, reviews);
+            FetchReviewsAsyncTask movieReview = new FetchReviewsAsyncTask(this, reviewArrayAdapter);
+            movieReview.execute(new Long(movieID).toString());
+            ListView review = (ListView)findViewById(R.id.review_list_view);
+            review.setAdapter(reviewArrayAdapter);
+
+            int favourite = movieDetailCursor.getInt(COL_FAVOURITE);
             final TextView favourites = (TextView) findViewById(R.id.toggle_favourites);
-            if (favourite == 1)
+            if (favourite == 1) {
                 favourites.setText(getResources().getString(R.string.remove_from_favourites));
-            else
+            } else {
                 favourites.setText(getResources().getString(R.string.add_to_favourites));
-
+            }
             final ContentValues movieCV = new ContentValues();
             movieCV.put(MoviesContract.MoviesEntry._ID, movieID);
-            // Let's complement the values of favourite if the button will be clicked :D
 
             favourites.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    int favourite = 0;
+                    Cursor favouriteCursor = getContentResolver().query(detailUri,
+                            FAVOURITE_COLUMNS,
+                            null,
+                            null,
+                            null);
+
+                    if (favouriteCursor.getCount() == 1) {
+                        favouriteCursor.moveToFirst();
+                        favourite = favouriteCursor.getInt(0);
+
+                    }
                     ContentValues localCV = new ContentValues(movieCV);
-                    localCV.put(MoviesContract.MoviesEntry.COLUMN_FAVOURITE, favourite == 1 ? 0 :1 );
+                    // Let's complement the values of favourite if the button will be clicked :D
+                    favourite = favourite == 1 ? 0 : 1;
+                    localCV.put(MoviesContract.MoviesEntry.COLUMN_FAVOURITE, favourite);
                     getContentResolver().update(detailUri,
                             localCV,
                             null,
                             null);
-                    int localFavourite = localCV.getAsInteger(MoviesContract.MoviesEntry.COLUMN_FAVOURITE);
-                    Log.d(LOG_TAG, "ma quanto cazzo vali " + new Integer(localFavourite).toString());
-                    if (localCV.getAsInteger(MoviesContract.MoviesEntry.COLUMN_FAVOURITE) == 1) {
+
+                    if (favourite == 1) {
                         favourites.setText(getResources().getString(R.string.remove_from_favourites));
                     }
                     else {
@@ -142,9 +163,9 @@ public class MovieDetailActivity extends AppCompatActivity implements OnTaskComp
     }
 
     public void onTaskCompleted(List<String> trailers) {
-        Log.d(LOG_TAG, "trailers " + trailers.toArray().toString());
         ImageView trailer = (ImageView) findViewById(R.id.trailer_imageview);
-        if (trailers.size() > 0) {
+        if (trailers != null && trailers.size() > 0) {
+            trailer.setVisibility(View.VISIBLE);
             final List<String> results = trailers;
             trailer.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -155,9 +176,15 @@ public class MovieDetailActivity extends AppCompatActivity implements OnTaskComp
                     startActivity(viewTrailer);
                 }
             });
-        } else
+        } else {
             trailer.setImageResource(R.drawable.no_trailer);
+            TextView noTrailes = (TextView)findViewById(R.id.no_trailer_text_view);
+            noTrailes.setVisibility(View.VISIBLE);
+            trailer.setVisibility(View.VISIBLE);
+
+        }
     }
+
 
 }
 

@@ -185,7 +185,6 @@ public class MoviesProvider extends ContentProvider {
     public int update(Uri uri, ContentValues contentValues, String selection, String[] selectionArgs){
         final SQLiteDatabase db = mOpenHelper.getWritableDatabase();
         int rowUpdated = 0;
-        Log.d(LOG_TAG, "SONO LA UPDATE ");
         if (contentValues == null){
             throw new IllegalArgumentException("Cannot have null content values");
         }

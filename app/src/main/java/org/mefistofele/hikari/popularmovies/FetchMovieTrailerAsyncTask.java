@@ -1,6 +1,7 @@
 package org.mefistofele.hikari.popularmovies;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Log;
@@ -19,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static android.webkit.ConsoleMessage.MessageLevel.LOG;
+import static org.mefistofele.hikari.popularmovies.R.drawable.trailer;
 
 /**
  * Created by seba on 08/10/16.
@@ -48,7 +50,6 @@ public class FetchMovieTrailerAsyncTask extends AsyncTask<String, Void, List<Str
 
         JSONObject forecastJson = new JSONObject(downloadedData);
         JSONArray trailersArray = forecastJson.getJSONArray(MDB_LIST);
-
         ArrayList<String> trailers = new ArrayList<String>();
         for (int i = 0; i < trailersArray.length(); i++) {
             JSONObject trailersObj = trailersArray.getJSONObject(i);
@@ -130,24 +131,26 @@ public class FetchMovieTrailerAsyncTask extends AsyncTask<String, Void, List<Str
                 }
             }
         }
-
         try {
             return getTrailerFromJSON(movieData);
 
         } catch (JSONException e) {
             Log.e(LOG_TAG, e.getMessage(), e);
             e.printStackTrace();
+            return null;
         }
-        return null;
     }
 
     @Override
     protected void onPostExecute(List<String> trailers) {
         super.onPostExecute(trailers);
-        for (String s : trailers)
-            Log.d(LOG_TAG, "results " + s);
-        if (trailers != null)
-            mOnTaskCompleted.onTaskCompleted(trailers);
+        if (trailers != null) {
+            for (String t : trailers)
+                Log.d(LOG_TAG,  "ho dei trailers " + t);
+        } else {
+            Log.d(LOG_TAG, "NON HO TROVATO DEI TRAILERS");
+        }
+        mOnTaskCompleted.onTaskCompleted(trailers);
 
     }
 }

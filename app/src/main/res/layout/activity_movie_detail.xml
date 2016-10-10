@@ -93,8 +93,16 @@
             android:layout_gravity="center"
             android:src="@drawable/trailer"
             android:layout_width="match_parent"
-            android:layout_height="50dp">
+            android:layout_height="50dp"
+            android:visibility="invisible">
         </ImageView>
+        <TextView
+            android:id="@+id/no_trailer_text_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/no_trailers_available"
+            android:gravity="center_horizontal"
+            android:visibility="gone"/>
         <TextView
             style="@style/SubTitle"
             android:layout_width="match_parent"

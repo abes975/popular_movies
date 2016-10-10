@@ -22,7 +22,6 @@
     <string name="release_date">Release Date</string>
     <string name="rating">Rating</string>
     <string name="synopsis">Synopsis</string>
-
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="no_trailers_available">No trailer available so far</string>
+    <string name="no_reviews_available">No reviews available so far</string>
 </resources>
