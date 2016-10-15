@@ -41,7 +41,6 @@ public class FetchReviewsAsyncTask extends AsyncTask<String, Void, List<String>>
     private List<String> getTrailerFromJSON(String downloadedData) throws JSONException {
         // These are the names of the JSON objects that need to be extracted.
         final String MDB_LIST = "results";
-        Log.d(LOG_TAG, downloadedData);
         JSONObject forecastJson = new JSONObject(downloadedData);
         JSONArray reviewssArray = forecastJson.getJSONArray(MDB_LIST);
 
@@ -81,7 +80,7 @@ public class FetchReviewsAsyncTask extends AsyncTask<String, Void, List<String>>
                     .build();
 
             URL url = new URL(builtUri.toString());
-            Log.d("QUERY ", url.toString());
+            //Log.d("QUERY ", url.toString());
 
             // Create the request to OpenWeatherMap, and open the connection
             urlConnection = (HttpURLConnection) url.openConnection();

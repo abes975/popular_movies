@@ -86,7 +86,7 @@ public class FetchMovieTrailerAsyncTask extends AsyncTask<String, Void, List<Str
                     .build();
 
             URL url = new URL(builtUri.toString());
-            Log.d("QUERY ", url.toString());
+            //Log.d("QUERY ", url.toString());
 
             // Create the request to OpenWeatherMap, and open the connection
             urlConnection = (HttpURLConnection) url.openConnection();
@@ -144,12 +144,6 @@ public class FetchMovieTrailerAsyncTask extends AsyncTask<String, Void, List<Str
     @Override
     protected void onPostExecute(List<String> trailers) {
         super.onPostExecute(trailers);
-        if (trailers != null) {
-            for (String t : trailers)
-                Log.d(LOG_TAG,  "ho dei trailers " + t);
-        } else {
-            Log.d(LOG_TAG, "NON HO TROVATO DEI TRAILERS");
-        }
         mOnTaskCompleted.onTaskCompleted(trailers);
 
     }

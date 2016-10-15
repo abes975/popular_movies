@@ -48,14 +48,16 @@ public class MovieDetailActivity extends AppCompatActivity  {
         setContentView(R.layout.activity_detail);
         //String movieSize = "w500";
         Intent intent = getIntent();
-        String movieStringlUri = intent.getStringExtra("MOVIE_DETAIL_URI");
-        if (movieStringlUri == null)
+        Uri movielUri = intent.getParcelableExtra("MOVIE_DETAIL_URI");
+        if (movielUri == null)
             return;
         Bundle args = new Bundle();
-        args.putSerializable("MovieUri", movieStringlUri);
-        MovieDetailFragment detailFragment = new MovieDetailFragment();
-        detailFragment.setArguments(args);
-        getSupportFragmentManager().beginTransaction().replace(R.id.movie_detail_container, detailFragment).commit();
+        args.putParcelable("MOVIE_DETAIL_URI", movielUri);
+        if (savedInstanceState == null) {
+            MovieDetailFragment detailFragment = new MovieDetailFragment();
+            detailFragment.setArguments(args);
+            getSupportFragmentManager().beginTransaction().add(R.id.movie_detail_container, detailFragment).commit();
+        }
     }
 
 

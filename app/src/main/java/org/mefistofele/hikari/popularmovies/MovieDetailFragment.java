@@ -8,6 +8,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -33,7 +34,7 @@ import static org.mefistofele.hikari.popularmovies.R.string.synopsis;
 public class MovieDetailFragment extends Fragment implements OnTaskCompleted<List<String>> {
 
     private static final String LOG_TAG = MovieDetailActivity.class.getSimpleName();
-    private String movieStringlUri;
+    private Uri movieStringlUri;
 
     private static class ViewHolder {
         TextView title;
@@ -80,26 +81,34 @@ public class MovieDetailFragment extends Fragment implements OnTaskCompleted<Lis
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        View rootView;
         if (getArguments() != null) {
-            movieStringlUri = (String) getArguments().getSerializable("MovieUri");
+            movieStringlUri = (Uri) getArguments().getParcelable("MOVIE_DETAIL_URI");
+
+            // Inflate the layout for this fragment
+            rootView = inflater.inflate(R.layout.fragment_movie_detail, container, false);
+            viewHolder = new ViewHolder();
+            viewHolder.title = (TextView) rootView.findViewById(R.id.text_view_title);
+            viewHolder.releaseDate = (TextView) rootView.findViewById(R.id.text_view_release_date);
+            viewHolder.rating = (TextView) rootView.findViewById(R.id.text_view_rating);
+            viewHolder.poster = (ImageView) rootView.findViewById(R.id.image_view_poster);
+            viewHolder.synopsis = (TextView) rootView.findViewById(R.id.text_view_sysnopsis);
+            viewHolder.favourites = (TextView) rootView.findViewById(R.id.toggle_favourites);
+            viewHolder.review = (ListView) rootView.findViewById(R.id.review_list_view);
+            viewHolder.trailer = (ImageView) rootView.findViewById(R.id.trailer_imageview);
+            viewHolder.noTrailers = (TextView) rootView.findViewById(R.id.no_trailer_text_view);
+
+            rootView.setTag(viewHolder);
+        } else {
+            rootView = inflater.inflate(R.layout.empty_detail, container, false);
         }
-
-        // Inflate the layout for this fragment
-        View rootView = inflater.inflate(R.layout.fragment_movie_detail, container, false);
-        viewHolder = new ViewHolder();
-        viewHolder.title = (TextView) rootView.findViewById(R.id.text_view_title);
-        viewHolder.releaseDate = (TextView) rootView.findViewById(R.id.text_view_release_date);
-        viewHolder.rating = (TextView) rootView.findViewById(R.id.text_view_rating);
-        viewHolder.poster = (ImageView) rootView.findViewById(R.id.image_view_poster);
-        viewHolder.synopsis = (TextView) rootView.findViewById(R.id.text_view_sysnopsis);
-        viewHolder.favourites = (TextView) rootView.findViewById(R.id.toggle_favourites);
-        viewHolder.review = (ListView) rootView.findViewById(R.id.review_list_view);
-        viewHolder.trailer = (ImageView) rootView.findViewById(R.id.trailer_imageview);
-        viewHolder.noTrailers = (TextView)rootView.findViewById(R.id.no_trailer_text_view);
-
-
-        rootView.setTag(viewHolder);
         return rootView;
+    }
+
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
     }
 
     @Override
@@ -107,7 +116,7 @@ public class MovieDetailFragment extends Fragment implements OnTaskCompleted<Lis
         super.onStart();
         if (movieStringlUri == null)
             return;
-        final Uri detailUri = Uri.parse(movieStringlUri);
+        final Uri detailUri = movieStringlUri;
         long movieID = ContentUris.parseId(detailUri);
         // Get data from Content Provider
         Cursor movieDetailCursor = getContext().getContentResolver().query(detailUri,
@@ -116,7 +125,6 @@ public class MovieDetailFragment extends Fragment implements OnTaskCompleted<Lis
                 null,
                 null);
 
-        //Log.d(LOG_TAG, DatabaseUtils.dumpCursorToString(movieDetailCursor));
 
         if (movieDetailCursor.getCount() != 0) {
             movieDetailCursor.moveToFirst();

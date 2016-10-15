@@ -47,7 +47,6 @@ public class MovieCursorAdapter extends CursorAdapter {
      */
     @Override
     public void bindView(View view, Context context, final Cursor cursor) {
-        //Log.d(LOG_TAG, "Dentro BindView " + DatabaseUtils.dumpCursorToString(cursor));
         ImageView moviePoster = (ImageView) view;
         String base_url = "http://image.tmdb.org/t/p/w500/";
         moviePoster.setAdjustViewBounds(true);

@@ -116,7 +116,6 @@ public class MoviesProvider extends ContentProvider {
             }
         }
         getContext().getContentResolver().notifyChange(uri, null);
-        Log.d(LOG_TAG, "Insert method..returning " + returnUri.toString());
         return returnUri;
     }
 
@@ -169,7 +168,6 @@ public class MoviesProvider extends ContentProvider {
                     }
                     db.setTransactionSuccessful();
                 } catch (SQLiteConstraintException e) {
-                    //Log.d(LOG_TAG, "We got a duplicate movie...who cares");
                 }
                 finally {
                     db.endTransaction();

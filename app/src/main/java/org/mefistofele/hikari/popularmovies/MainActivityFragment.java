@@ -60,6 +60,13 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
     public MainActivityFragment() {
     }
 
+    public interface Callback {
+        /**
+         * DetailFragmentCallback for when an item has been selected.
+         */
+        public void onMovieSelected(Uri dateUri);
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -107,12 +114,11 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
                 // if it cannot seek to that position.
                 Cursor cursor = (Cursor) adapterView.getItemAtPosition(position);
                 if (cursor != null) {
-                    String detailMovieUri = MoviesContract.MoviesEntry.buildMoviesUri(
-                            cursor.getLong(MainActivityFragment.COL_ID)).toString();
-                    Intent detailIntent =
-                            new Intent(view.getContext(), MovieDetailActivity.class);
-                    detailIntent.putExtra("MOVIE_DETAIL_URI", detailMovieUri);
-                    startActivity(detailIntent);
+                    Uri detailMovieUri = MoviesContract.MoviesEntry.buildMoviesUri(
+                            cursor.getLong(MainActivityFragment.COL_ID));
+
+                    ((Callback) getActivity())
+                            .onMovieSelected(detailMovieUri);
                 }
             }
         });
@@ -126,6 +132,10 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
     }
 
 
+    public void onSortOrderChanged() {
+        getLoaderManager().restartLoader(MOVIE_LOADER, null, this);
+    }
+
     private void updateMovies() {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
         FetchMovieAsyncTask fetchMovieAsyncTask = new FetchMovieAsyncTask(getContext());
@@ -138,14 +148,12 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
     @Override
     public void onStart() {
         getLoaderManager().restartLoader(MOVIE_LOADER, null, this);
-        //Log.d(LOG_TAG, "On start called");
         super.onStart();
         updateMovies();
     }
 
 
     public void onResume() {
-        //Log.d(LOG_TAG, "On resume called");
         getLoaderManager().restartLoader(MOVIE_LOADER, null, this);
         super.onResume();
         updateMovies();
@@ -181,7 +189,6 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
             inserted = getContext().getContentResolver()
                     .bulkInsert(MoviesContract.MoviesEntry.CONTENT_URI, cvArray);
         }
-        Log.d(LOG_TAG, "Record inserted Complete. " + inserted + " Inserted");
         getLoaderManager().restartLoader(MOVIE_LOADER, null, this);
     }
 
